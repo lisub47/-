@@ -127,38 +127,42 @@ if uploaded_file is not None:
         st.error("卷積核格式輸入錯誤，請確認輸入數值與格式。")
 
     # ==========================================
-    # 4. 人臉偵測 (OpenCV Haar-Cascade)
+    # 4. 人臉偵測模組 (OpenCV 容錯版)
     # ==========================================
     st.header("4. 人臉偵測模組 (OpenCV)")
     
-    # 建立兩個並排的滑桿，讓介面更整齊
     col_a, col_b = st.columns(2)
     with col_a:
         scale_factor = st.slider("偵測靈敏度 (Scale Factor)", 1.05, 1.50, 1.10, 0.01)
     with col_b:
         min_neighbors = st.slider("相鄰矩形門檻 (minNeighbors)", 1, 15, 5, 1)
     
-    # 直接讀取同資料夾下的 XML 檔
     xml_path = 'haarcascade_frontalface_default.xml'
-    face_cascade = cv2.CascadeClassifier(xml_path)
     
-    # 檢查模型是否成功載入
-    if face_cascade.empty():
-        st.error(f"找不到模型！請確認你已下載 '{xml_path}' 並與 app.py 放在同一個資料夾。")
+    # 檢查檔案是否存在
+    if not os.path.exists(xml_path):
+        st.error(f"找不到模型檔案 '{xml_path}'，請確認是否已正確上傳至 GitHub。")
     else:
-        # Haar-Cascade 需要灰階影像進行運算
-        gray_img = cv2.cvtColor(original_img_rgb, cv2.COLOR_RGB2GRAY)
+        face_cascade = cv2.CascadeClassifier()
+        # 使用 load 方法並進行例外處理
+        success = face_cascade.load(cv2.samples.findFile(xml_path) if hasattr(cv2.samples, 'findFile') else xml_path)
         
-        # 執行偵測，套用使用者在網頁上調整的 min_neighbors 變數
-        faces = face_cascade.detectMultiScale(gray_img, scaleFactor=scale_factor, minNeighbors=min_neighbors, minSize=(30, 30))
-        
-        annotated_image = original_img_rgb.copy()
-        detected_count = len(faces)
-        
-        # 繪製邊界框
-        for (x, y, w, h) in faces:
-            cv2.rectangle(annotated_image, (x, y), (x + w, y + h), (0, 255, 0), 3)
-            cv2.putText(annotated_image, "Face", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-                            
-        st.image(annotated_image, caption="人臉偵測結果", use_container_width=True)
-        st.success(f"**偵測到的人臉總數**: {detected_count}")
+        if not success or face_cascade.empty():
+            # 備用載入法
+            face_cascade = cv2.CascadeClassifier(xml_path)
+            
+        if face_cascade.empty():
+            st.error("模型載入失敗！請嘗試重新上傳 XML 檔案。")
+        else:
+            gray_img = cv2.cvtColor(original_img_rgb, cv2.COLOR_RGB2GRAY)
+            faces = face_cascade.detectMultiScale(gray_img, scaleFactor=scale_factor, minNeighbors=min_neighbors, minSize=(30, 30))
+            
+            annotated_image = original_img_rgb.copy()
+            detected_count = len(faces)
+            
+            for (x, y, w, h) in faces:
+                cv2.rectangle(annotated_image, (x, y), (x + w, y + h), (0, 255, 0), 3)
+                cv2.putText(annotated_image, "Face", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+                                
+            st.image(annotated_image, caption="人臉偵測結果", use_container_width=True)
+            st.success(f"**偵測到的人臉總數**: {detected_count}")
