@@ -12,7 +12,7 @@ st.title("互動式影像處理與人臉分析工具")
 # 1. 影像載入與基礎解析
 # ==========================================
 st.header("1. 影像載入與基礎解析")
-uploaded_file = st.file_uploader("請上streamlit run app.py傳影像 (支援 PNG, JPG, JPEG, BMP)", type=["png", "jpg", "jpeg", "bmp"])
+uploaded_file = st.file_uploader("請上傳影像 (支援 PNG, JPG, JPEG, BMP)", type=["png", "jpg", "jpeg", "bmp"])
 
 if uploaded_file is not None:
     # 讀取影像
