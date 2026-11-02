@@ -3,7 +3,6 @@ import streamlit as st
 import cv2
 import numpy as np
 from PIL import Image
-import mediapipe as mp
 import math
 
 st.set_page_config(page_title="影像處理與人臉分析工具", layout="wide")
